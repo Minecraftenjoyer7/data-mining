@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Download Your Report</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center h-screen">
+  <div class="bg-white shadow-2xl rounded-2xl p-10 text-center max-w-md">
+    <div class="mb-6">
+      <svg class="mx-auto h-20 w-20 text-blue-500 animate-spin" id="loader" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+      </svg>
+      <h1 class="text-2xl font-bold mt-4 text-gray-800">Generating Your Report...</h1>
+      <p class="text-gray-500 mt-2">Please wait while we prepare your PDF.</p>
+    </div>
+    <a id="downloadBtn" href="#" download class="hidden mt-6 px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition duration-200">⬇️ Download PDF</a>
+  </div>
+
+  <script>
+    async function checkPDF() {
+      try {
+        const res = await fetch("/generate_pdf");
+        const data = await res.json();
+        if (data.status === "ready") {
+          document.getElementById("loader").style.display = "none";
+          const downloadBtn = document.getElementById("downloadBtn");
+          downloadBtn.href = "/download_ready_pdf";
+          downloadBtn.classList.remove("hidden");
+        } else {
+          console.error("PDF generation failed:", data.message);
+        }
+      } catch (e) {
+        console.error("Error checking PDF status", e);
+      }
+    }
+
+    window.onload = checkPDF;
+  </script>
+</body>
+</html>

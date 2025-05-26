@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Clustering Metrics Dashboard</title>
+  <style>
+    :root {
+      --primary-color: #0d6efd;
+      --secondary-color: #6c757d;
+      --background-color: #f8f9fa;
+      --card-bg: #ffffff;
+      --border-radius: 0.5rem;
+      --shadow: 0 0.5rem 1rem rgba(0,0,0,0.1);
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      background: var(--background-color);
+      color: #212529;
+    }
+
+    header {
+      background: var(--primary-color);
+      color: white;
+      padding: 1.5rem 2rem;
+      text-align: center;
+      box-shadow: var(--shadow);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 2rem;
+    }
+
+    .container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      padding: 2rem;
+      gap: 2rem;
+    }
+
+    .meter-box {
+      background: var(--card-bg);
+      border-radius: var(--border-radius);
+      padding: 1.5rem;
+      width: 280px;
+      box-shadow: var(--shadow);
+      text-align: center;
+      transition: transform 0.3s ease;
+    }
+
+    .meter-box:hover {
+      transform: translateY(-5px);
+    }
+
+    h2 {
+      font-size: 1.25rem;
+      color: var(--primary-color);
+      margin-bottom: 0.75rem;
+    }
+
+    meter {
+      width: 100%;
+      height: 1.5rem;
+      margin-bottom: 0.75rem;
+    }
+
+    p {
+      font-size: 1rem;
+      color: #495057;
+    }
+
+    .info-box {
+      max-width: 900px;
+      background: var(--card-bg);
+      margin: 2rem auto;
+      padding: 2rem;
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+    }
+
+    .info-box h2 {
+      color: var(--primary-color);
+    }
+
+    .info-box h3 {
+      margin-top: 1.5rem;
+      color: var(--secondary-color);
+    }
+
+    .info-box p {
+      line-height: 1.6;
+      color: #343a40;
+    }
+
+    @media (max-width: 600px) {
+      .meter-box {
+        width: 90%;
+      }
+
+      .info-box {
+        padding: 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Clustering Metrics Dashboard</h1>
+  </header>
+
+  <div class="container">
+    <div class="meter-box">
+      <h2>Silhouette Score</h2>
+      <meter id="silhouetteMeter" min="-1" max="1" low="0.25" high="0.75" optimum="1" value="{{Silhouette_Score}}"></meter>
+      <p id="silhouetteValue">{{Silhouette_Score}}</p>
+    </div>
+
+    <div class="meter-box">
+      <h2>Davies-Bouldin Index</h2>
+      <meter id="dbiMeter" min="0" max="3" low="1.5" high="0.5" optimum="0" value="{{Davies_Bouldin_Index}}"></meter>
+      <p id="dbiValue">{{Davies_Bouldin_Index}}</p>
+    </div>
+  </div>
+
+  <div class="info-box">
+    <h2>What Do These Metrics Mean?</h2>
+
+    <h3>Silhouette Score</h3>
+    <p>The Silhouette Score measures how similar a data point is to its own cluster compared to other clusters. It ranges from -1 to 1. A value near 1 means the object is well-matched to its own cluster and poorly matched to neighboring clusters. Values near 0 indicate overlapping clusters, and negative values suggest misclassification.</p>
+
+    <h3>Davies-Bouldin Index (DBI)</h3>
+    <p>The DBI evaluates clustering quality by looking at the ratio between within-cluster scatter and between-cluster separation. Lower values indicate better clustering. A DBI close to 0 implies compact, well-separated clusters. High values suggest poor clustering structure.</p>
+  </div>
+</body>
+</html>

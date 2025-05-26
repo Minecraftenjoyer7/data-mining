@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Training vs Test Split</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f9f9f9;
+      margin: 0;
+      padding: 40px 20px;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 28px;
+      margin-bottom: 50px;
+    }
+
+    .range-container {
+      width: 60%;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    #dataRange {
+      width: 100%;
+      margin-bottom: 10px;
+    }
+
+    .range-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 16px;
+      font-weight: bold;
+      padding: 0 5px;
+    }
+
+    .range-values {
+      text-align: center;
+      font-size: 18px;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+
+    .note-box {
+      width: 60%;
+      margin: 40px auto 0;
+      background-color: #e3e8ed;
+      border-left: 5px solid #2196F3;
+      padding: 15px 20px;
+      font-size: 16px;
+      line-height: 1.5;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+        .confirm-btn {
+      display: block;
+      margin: 0 auto;
+      margin-top: 20px;
+      padding: 12px 25px;
+      font-size: 16px;
+      background-color: #2196F3;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .confirm-btn:hover {
+      background-color: #1976D2;
+    }
+  </style>
+</head>
+<body>
+  <h1>Choose Data Split</h1>
+  <form method="POST" action="{{url_for('data_split')}}">
+  <div class="range-container">
+    <input type="range" min="0" max="99" value="80" id="dataRange" name="range_value">
+    <div class="range-labels">
+      <span>Training Data</span>
+      <span>Test Data</span>
+    </div>
+    <div class="range-values">
+      Training: <span id="trainValue">80</span>% &nbsp; | &nbsp; Test: <span id="testValue">20</span>%
+    </div>
+  </div>
+   <button type="submit" class="confirm-btn">Confirm Split</button>
+
+  </form>
+  <div class="note-box">
+    <strong>Note:</strong> Empirical studies show that the best results are obtained if we use 20–30% of the data for testing, and the remaining 70–80% of the data for training.
+  </div>
+
+  <script>
+    const range = document.getElementById('dataRange');
+    const trainValue = document.getElementById('trainValue');
+    const testValue = document.getElementById('testValue');
+
+    range.addEventListener('input', () => {
+      if (range.value < 60) {
+        range.value = 60;
+      }
+      trainValue.textContent = range.value;
+      testValue.textContent = 100 - range.value;
+    });
+
+    range.addEventListener('input', () => {
+      if (range.value == 100) {
+        range.value = 99;
+      }
+      trainValue.textContent = range.value;
+      testValue.textContent = 100 - range.value;
+    });
+
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+      window.onload = function() {
+        alert("{{ messages[0] }}");
+      }
+  {% endif %}
+{% endwith %}
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Pie Chart Layout</title>
+  <style>
+    :root {
+      --primary: #0d6efd;
+      --axis-color: #343a40;
+      --bg: #f8f9fa;
+      --card-bg: #ffffff;
+      --border-radius: 12px;
+      --shadow: 0 6px 20px rgba(0,0,0,0.08);
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: var(--bg);
+      padding: 40px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .plot-container {
+      width: 1400px;
+      height: 600px;
+      background: var(--card-bg);
+      border: 2px solid var(--axis-color);
+      position: relative;
+      border-radius: var(--border-radius);
+      padding: 60px;
+      box-shadow: var(--shadow);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .graph-container {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 500px;
+      height: 500px;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .graph-container img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .placeholder-circle {
+      width: 400px;  /* Increased from 300px */
+      height: 400px; /* Increased from 300px */
+    }
+
+    .arc-controls {
+      position: absolute;
+      top: 200px;
+      left: 50px;
+      transform: none;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      background: #fff;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    .hue-controls {
+      position: absolute;
+      top: 340px;
+      right: 50px;
+      transform: none;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      background: #fff;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+      width: 200px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      min-width: 180px;
+      position: relative;
+    }
+
+    label {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: #212529;
+    }
+
+    input {
+      padding: 8px 10px;
+      font-size: 14px;
+      border: 1px solid #ced4da;
+      border-radius: 6px;
+      transition: border 0.2s;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(13,110,253,0.2);
+    }
+
+    .custom-select {
+      position: relative;
+    }
+
+    .select-display {
+      padding: 8px 10px;
+      max-width: 192px;
+      font-size: 14px;
+      border: 1px solid #ced4da;
+      border-radius: 6px;
+      cursor: pointer;
+      background: #fff;
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      min-height: 36px;
+    }
+
+    .select-display::after {
+      content: '▼';
+      font-size: 12px;
+      color: #666;
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    .select-options {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: #fff;
+      border: 1px solid #ced4da;
+      border-radius: 6px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      z-index: 10;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .select-options.active {
+      display: block;
+    }
+
+    .option-group {
+      border-bottom: 1px solid #eee;
+    }
+
+    #btn_confirm {
+      width: 100px;
+      height: 40px;
+      margin-top: 590px;
+      margin-left: 650px;
+      border-radius: 10px;
+      border: none;
+      background-color: #0d6efd;
+      font-size: 15px;
+      color: white;
+    }
+
+    .option-group:last-child {
+      border-bottom: none;
+    }
+
+    .column-option {
+      padding: 8px 10px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .column-option:hover {
+      background: #f0f0f0;
+    }
+
+    .column-option::after {
+      content: '▶';
+      font-size: 12px;
+      color: #666;
+    }
+
+    .agg-options {
+      display: none;
+      background: #f8f9fa;
+      padding-left: 20px;
+    }
+
+    .agg-options.active {
+      display: block;
+    }
+
+    .agg-option {
+      padding: 8px 10px;
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    .agg-option:hover {
+      background: #e9ecef;
+    }
+
+    .agg-option input[type="checkbox"] {
+      margin-right: 8px;
+    }
+
+    .agg-option label {
+      margin: 0;
+      font-weight: normal;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    select, input {
+      padding: 8px 10px;
+      font-size: 14px;
+      border: 1px solid #ced4da;
+      border-radius: 6px;
+      transition: border 0.2s;
+    }
+
+    select:focus, input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(13,110,253,0.2);
+    }
+
+    @media (max-width: 768px) {
+      .plot-container {
+        width: 95%;
+        height: auto;
+        padding: 40px 20px;
+        flex-direction: column;
+      }
+
+      .arc-controls, .hue-controls {
+        flex-direction: column;
+        position: static;
+        transform: none;
+        margin-top: 20px;
+        box-shadow: none;
+        padding: 0;
+        background: none;
+        width: 100%;
+      }
+
+      .hue-controls {
+        right: auto;
+        top: auto;
+      }
+
+      .select-options {
+        position: static;
+        width: 100%;
+        margin-top: 5px;
+      }
+
+      .graph-container {
+        position: static;
+        width: 100%;
+        height: auto;
+        margin-top: 20px;
+        transform: none;
+      }
+
+      #btn_confirm {
+        margin-left: auto;
+        margin-right: auto;
+        display: block;
+      }
+    }
+        #arrows-text {
+        text-align: center;
+        font-size: 22px;
+        font-weight: bold;
+        margin-top: 50px;
+        color: #333;
+        decoration:none;
+      }
+   #arrows-text > a{
+      text-decoration:none;
+    }
+        #saveBtn{
+      width: 130px;
+      height: 40px;
+      margin-top: 590px;
+      margin-left: 0px;
+      border-radius: 10px;
+      border: none;
+      font-size: 15px;
+      background-color: #0d6efd;
+      color: white;
+      align-self: flex-start;
+
+    }
+  </style>
+</head>
+<body>
+    <div class="page-wrapper">
+<div class="plot-container">
+  <!-- Graph Container -->
+  <div class="graph-container">
+    {% if graph %}
+      <img src="data:image/png;base64,{{ graph }}" alt="Pie Chart">
+    {% else %}
+      <svg class="placeholder-circle" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="45" fill="none" stroke="black" stroke-width="2"/>
+        <text x="50" y="50" font-size="50" text-anchor="middle" dy=".3em" fill="black">?</text>
+      </svg>
+    {% endif %}
+  </div>
+
+  <form method="post" action="{{ url_for('pie_graph') }}">
+    <!--==================================== Arc Controls (Slices) ========================================-->
+  <div class="arc-controls">
+      <div class="form-group">
+        <label for="arc-column">Arc Column (Slices)</label>
+        <div class="custom-select" id="arc-custom-select">
+          <div class="select-display" onclick="toggleSelect('arc')">Select column</div>
+          <div class="select-options" id="arc-options">
+            {% for col in arc_columns %}
+            <div class="option-group">
+              <div class="column-option" onclick="toggleAggOptions('arc', '{{col}}', '{{ column_types[col] }}')">{{col}}</div>
+              <div class="agg-options" id="arc-agg-{{col}}">
+                <div class="agg-option" data-agg="none" onclick="selectOption('arc', '{{col}}', 'none')">None</div>
+                <div class="agg-option" data-agg="count" onclick="selectOption('arc', '{{col}}', 'count')">Count</div>
+                <div class="agg-option numeric-only" data-agg="sum" onclick="selectOption('arc', '{{col}}', 'sum')">Sum</div>
+                <div class="agg-option numeric-only" data-agg="average" onclick="selectOption('arc', '{{col}}', 'average')">Average</div>
+                <div class="agg-option numeric-only" data-agg="max" onclick="selectOption('arc', '{{col}}', 'max')">Max</div>
+                <div class="agg-option numeric-only" data-agg="min" onclick="selectOption('arc', '{{col}}', 'min')">Min</div>
+                <div class="agg-option numeric-only" data-agg="median" onclick="selectOption('arc', '{{col}}', 'median')">Median</div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        <input type="hidden" name="arc-column" id="arc-column-hidden">
+        <input type="hidden" name="arc-agg" id="arc-agg-hidden">
+      </div>
+    </div>
+
+    <!--==================================== Hue Controls ========================================-->
+    <div class="hue-controls">
+      <div class="form-group">
+        <label for="hue-column">Hue Column (Nested Grouping)</label>
+        <select id="hue-column" name="hue-column">
+          <option value="">Select column</option>
+          {% for col in hue_columns %}
+          <option value="{{col}}">{{col}}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <input type="hidden" name="hue-column" id="hue-column-hidden">
+    </div>
+
+    <!--=============================================================================================-->
+    <button id="btn_confirm" type="submit">Confirm</button>
+  </form>
+  {% if graph %}
+  <div style="width: 100%; text-align: left; padding-left: 20px;">
+        <button type="button" class="btn btn-outline-primary" id="saveBtn" onclick="saveGraph()">📥 Save Graph</button>
+  </div>
+  {% endif %}
+</div>
+  <div id="arrows-text">
+    <a href="{{url_for('download_pdf')}}">Download pdf ➔</a>
+     <span>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</span>
+      <a href="{{url_for('download_dataset')}}">Download dataset ➔</a>
+  </div>
+</div>
+<script>
+  function toggleSelect(axis) {
+    const options = document.getElementById(`${axis}-options`);
+    options.classList.toggle('active');
+  }
+
+  function toggleAggOptions(axis, column, columnType) {
+    const aggOptions = document.getElementById(`${axis}-agg-${column}`);
+    const isActive = aggOptions.classList.contains('active');
+
+    // Close all other aggregation options
+    document.querySelectorAll(`#${axis}-options .agg-options`).forEach(opt => {
+      opt.classList.remove('active');
+    });
+
+    if (!isActive) {
+      const aggItems = aggOptions.querySelectorAll('.agg-option');
+      aggItems.forEach(item => {
+        if (columnType === 'numeric') {
+          item.style.display = 'flex';
+        } else {
+          const aggType = item.getAttribute('data-agg');
+          if (aggType === 'count') {
+            item.style.display = 'flex';
+          } else {
+            item.style.display = 'none';
+          }
+        }
+      });
+
+      aggOptions.classList.add('active');
+    }
+  }
+
+  function selectOption(axis, column, agg) {
+    const display = document.querySelector(`#${axis}-custom-select .select-display`);
+    if (agg === 'none') {
+      display.textContent = column;
+    } else {
+      display.textContent = `${column} (${agg})`;
+    }
+
+    document.getElementById(`${axis}-column-hidden`).value = column;
+    document.getElementById(`${axis}-agg-hidden`).value = agg;
+
+    const options = document.getElementById(`${axis}-options`);
+    options.classList.remove('active');
+    document.querySelectorAll(`#${axis}-options .agg-options`).forEach(opt => {
+      opt.classList.remove('active');
+    });
+  }
+
+  // Sync select changes with hidden inputs
+  document.querySelectorAll('select[name]').forEach(select => {
+    select.addEventListener('change', function() {
+      const hiddenInput = document.getElementById(`${select.name}-hidden`);
+      if (hiddenInput) {
+        hiddenInput.value = this.value;
+      }
+    });
+  });
+
+  // Close dropdowns when clicking outside
+  document.addEventListener('click', function(event) {
+    const selects = ['arc'];
+    selects.forEach(axis => {
+      const select = document.getElementById(`${axis}-custom-select`);
+      if (!select) return;
+      const options = document.getElementById(`${axis}-options`);
+      if (!select.contains(event.target)) {
+        options.classList.remove('active');
+        document.querySelectorAll(`#${axis}-options .agg-options`).forEach(opt => {
+          opt.classList.remove('active');
+        });
+      }
+    });
+  });
+
+    function checkGraphInGraphs() {
+  fetch("/save_graphs", {
+    method: "GET"
+  })
+  .then(res => res.json())
+  .then(isNewGraph => {
+    const btn = document.getElementById("saveBtn");
+    btn.disabled = !isNewGraph;
+    btn.innerText = isNewGraph ? "Save Graph" : "Already saved";
+  })
+  .catch(err => console.error("Error:", err));
+}
+
+checkGraphInGraphs();  // Call on page load or after rendering graph
+
+function saveGraph() {
+  fetch("/save_graphs", {
+    method: "POST"
+  })
+  .then(res => res.json())
+  .then(result => {
+    const btn = document.getElementById("saveBtn");
+    if (result === true) {
+      btn.disabled = true;
+      btn.innerText = "graph Saved successfully";
+    } else if (result === false) {
+      btn.disabled = true;
+      btn.innerText = "saved";
+    } else if (result.error) {
+      alert("Error: " + result.error);
+    }
+  })
+  .catch(err => {
+    document.getElementById("saveStatus").innerText = "Error: " + err;
+    console.error("Save error:", err);
+  });
+}
+</script>
+</body>
+</html>

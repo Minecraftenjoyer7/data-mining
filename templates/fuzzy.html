@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fuzzy Logic Selector</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+  <style>
+    body {
+      background-color: #dad9dd !important;
+      font-family: Arial, sans-serif;
+    }
+    .container {
+      max-width: 900px;
+      margin: 50px auto;
+    }
+    .card {
+      border-radius: 10px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.05);
+      padding: 30px;
+      background: #fff;
+    }
+    .form-group {
+      margin-bottom: 25px;
+      position: relative;
+    }
+    .fake-select {
+      width: 100%;
+      padding: 10px;
+      background-color: #e9ecef;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      cursor: pointer;
+      position: relative;
+      transition: border-color 0.2s ease;
+    }
+    .fake-select:hover {
+      border-color: #0d6efd;
+    }
+    .fake-select::after {
+      content: '▼';
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #666;
+    }
+    .checkbox-options {
+      display: none;
+      position: absolute;
+      top: 110%;
+      left: 0;
+      width: 100%;
+      background: #fff;
+      border: 1px solid #ccc;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      max-height: 200px;
+      overflow-y: auto;
+      z-index: 10;
+      border-radius: 5px;
+    }
+    .checkbox-options label {
+      display: flex;
+      align-items: center;
+      padding: 8px 12px;
+      cursor: pointer;
+    }
+    .checkbox-options label:hover {
+      background-color: #f1f1f1;
+    }
+    .checkbox-options input[type="checkbox"] {
+      margin-right: 10px;
+    }
+    select {
+      width: 100%;
+      padding: 10px;
+      font-size: 15px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      background-color: #e9ecef;
+      transition: border-color 0.2s ease;
+    }
+    select:focus {
+      outline: none;
+      border-color: #0d6efd;
+      box-shadow: 0 0 0 3px rgba(13,110,253,0.2);
+    }
+    .stats-box, .rule-box, .result-box {
+      border: 1px solid #dee2e6;
+      padding: 20px;
+      border-radius: 10px;
+      background-color: #f8f9fa;
+      margin-top: 20px;
+    }
+    .stat-card {
+      background: #fff;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 15px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      animation: slideIn 0.5s ease-in;
+    }
+    .stat-card h6 {
+      margin-bottom: 15px;
+      color: #333;
+      font-weight: 600;
+    }
+    .stat-panels {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .stat-panel {
+      flex: 1;
+      text-align: center;
+      padding: 15px;
+      border-radius: 6px;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .stat-panel:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .stat-panel.min {
+      border: 2px solid #17a2b8;
+      background: linear-gradient(145deg, rgba(23,162,184,0.1), rgba(23,162,184,0.05));
+    }
+    .stat-panel.avg {
+      border: 2px solid #ffc107;
+      background: linear-gradient(145deg, rgba(255,193,7,0.1), rgba(255,193,7,0.05));
+    }
+    .stat-panel.max {
+      border: 2px solid #28a745;
+      background: linear-gradient(145deg, rgba(40,167,69,0.1), rgba(40,167,69,0.05));
+    }
+    .stat-panel i {
+      font-size: 1.3em;
+      margin-bottom: 5px;
+    }
+    .stat-panel .value {
+      font-size: 1.5em;
+      font-weight: bold;
+      color: #333;
+    }
+    .stat-panel .label {
+      font-size: 0.9em;
+      color: #666;
+    }
+    .glow-effect::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(255,255,255,0.2), transparent);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .stat-panel:hover .glow-effect::before {
+      opacity: 1;
+    }
+    .rule-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .rule-row select {
+      flex: 1;
+      min-width: 150px;
+    }
+    .rule-extension {
+      width: 100%;
+      margin-left: 30px;
+      padding: 10px;
+      border-left: 2px solid #0d6efd;
+      background: rgba(13,110,253,0.05);
+      border-radius: 5px;
+    }
+    .rule-extension .rule-row {
+      margin-bottom: 10px;
+    }
+    .add-rule-btn {
+      margin-bottom: 15px;
+      cursor: pointer;
+    }
+    .plot-img {
+      max-width: 100%;
+      height: auto;
+      margin-bottom: 15px;
+      border-radius: 5px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(-20px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    #arrows-text {
+      text-align: center;
+      font-size: 22px;
+      font-weight: bold;
+      margin-top: 50px;
+      color: #333;
+    }
+    #arrows-text > a {
+      text-decoration: none;
+      color: #0d6efd;
+      transition: color 0.2s ease;
+    }
+    #arrows-text > a:hover {
+      color: #0056b3;
+    }
+    @media (max-width: 768px) {
+      .container {
+        margin: 20px;
+      }
+      .card, .stats-box, .rule-box, .result-box {
+        padding: 15px;
+      }
+      .stat-card {
+        padding: 10px;
+      }
+      .stat-panels, .rule-row {
+        flex-direction: column;
+        gap: 8px;
+      }
+      .stat-panel {
+        padding: 10px;
+      }
+      .stat-panel .value {
+        font-size: 1.2em;
+      }
+      .stat-panel .label {
+        font-size: 0.8em;
+      }
+      .plot-img {
+        max-width: 100%;
+      }
+      .rule-extension {
+        margin-left: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="card">
+    <h3 class="card-title text-center mb-4">Fuzzy Logic Column Selector</h3>
+    <form id="fuzzyForm" method="post" action="{{ url_for('fuzzy') }}">
+      <!-- Input Columns -->
+      <div class="form-group">
+        <label>Input Columns</label>
+        <span data-bs-toggle="tooltip" title="Select at least 2 columns for fuzzy logic inputs">
+          <div class="fake-select" onclick="toggleCheckboxOptions()">Select input columns</div>
+        </span>
+        <div class="checkbox-options" id="inputsOptions">
+          {% for col in columns %}
+            <label><input type="checkbox" value="{{ col }}" name="input_columns" onchange="syncInputsWithOutput()" /> {{ col }}</label>
+          {% endfor %}
+        </div>
+      </div>
+      <!-- Output Column -->
+      <div class="form-group">
+        <label>Output Column</label>
+        <select name="output_column" id="outputColumn" required onchange="syncInputsWithOutput()">
+          <option value="" disabled selected>Select output column</option>
+          {% for col in columns %}
+            <option value="{{ col }}">{{ col }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <!-- Defuzzification Method -->
+      <div class="form-group">
+        <label>Defuzzification Method</label>
+        <select name="defuzz_method" id="defuzzMethod" required>
+          <option value="" disabled selected>Select defuzzification method</option>
+          <option value="centroid">Centroid</option>
+          <option value="bisector">Bisector</option>
+          <option value="mom">Mom</option>
+          <option value="som">Som</option>
+          <option value="lom">Lom</option>
+        </select>
+      </div>
+      <div class="text-center">
+        <button type="submit" class="btn btn-success">Show Statistics & Define Rules</button>
+      </div>
+    </form>
+  </div>
+  <!-- Statistics Display -->
+  {% if metrics %}
+  <div class="stats-box">
+    <h5>Column Statistics</h5>
+    <div id="statsContent">
+      {% for metric in metrics %}
+      <div class="stat-card">
+        <h6>{{ metric.column }}</h6>
+        <div class="stat-panels">
+          <div class="stat-panel min glow-effect">
+            <i class="fas fa-arrow-down text-info"></i>
+            <div class="value">{{ metric.min | round(2) }}</div>
+            <div class="label">Min</div>
+          </div>
+          <div class="stat-panel avg glow-effect">
+            <i class="fas fa-balance-scale text-warning"></i>
+            <div class="value">{{ metric.avg | round(2) }}</div>
+            <div class="label">Avg</div>
+          </div>
+          <div class="stat-panel max glow-effect">
+            <i class="fas fa-arrow-up text-success"></i>
+            <div class="value">{{ metric.max | round(2) }}</div>
+            <div class="label">Max</div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+  <!-- Rule Creation Form -->
+  {% if show_rule_form %}
+  <div class="rule-box">
+    <h5>Define Fuzzy Rules</h5>
+    <form id="ruleForm" method="post" action="{{ url_for('fuzzy_rules') }}">
+      <div id="ruleContainer"></div>
+      <button type="button" class="btn btn-primary add-rule-btn" onclick="addRuleRow()">
+        <i class="fas fa-plus"></i> Add Rule
+      </button>
+      <div class="text-center">
+        <button type="submit" class="btn btn-success">Submit Rules</button>
+      </div>
+    </form>
+  </div>
+  {% endif %}
+  <!-- Fuzzy Logic Results -->
+  {% if predicted_output is defined %}
+  <div class="result-box">
+    <h5>Fuzzy Logic Output</h5>
+    <p><strong>Predicted {{ output_column }} ({{ defuzz_method | capitalize }}): </strong>{{ predicted_output }}</p>
+    <!-- Rules Display -->
+    {% if clean_rules %}
+    <h6>Defined Fuzzy Rules</h6>
+    <div class="rules-container" style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+      <ul style="list-style-type: none; padding: 0;">
+        {% for rule in clean_rules %}
+        <li style="padding: 8px; border-bottom: 1px solid #dee2e6;">
+          {{ rule }}
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+    <!-- Membership Functions -->
+    {% if clean_rules %}
+    <h6>Membership Functions</h6>
+    {% for plot_path in plot_paths %}
+    <img src="{{ url_for('static', filename=plot_path) }}" alt="Membership Function" class="plot-img">
+    {% endfor %}
+    {% endif %}
+  </div>
+  {% endif %}
+  <!-- Navigation Links (Conditional Display) -->
+  <div id="arrows-text">
+    <a href="{{ url_for('mining_technique_option') }}">back ➔</a>
+    <span>       </span>
+  {% if show_nav_links %}
+<!--    <a href="{{ url_for('fuzzy_graph') }}">Graph ➔</a>-->
+<!--    <span>             </span>-->
+    <a href="{{ url_for('visualization_method') }}">Visualization ➔</a>
+  {% endif %}
+  </div>
+</div>
+<script>
+  function toggleCheckboxOptions() {
+    const options = document.getElementById('inputsOptions');
+    options.style.display = options.style.display === 'block' ? 'none' : 'block';
+  }
+
+  window.addEventListener('click', function(e) {
+    const select = document.querySelector('#inputsOptions').previousElementSibling;
+    const options = document.getElementById('inputsOptions');
+    if (!select.contains(e.target) && !options.contains(e.target)) {
+      options.style.display = 'none';
+    }
+  });
+
+  function syncInputsWithOutput() {
+    const outputColumn = document.getElementById('outputColumn').value;
+    const inputCheckboxes = document.querySelectorAll('#inputsOptions input[type="checkbox"]');
+    inputCheckboxes.forEach(cb => {
+      cb.disabled = (cb.value === outputColumn);
+      if (cb.value === outputColumn) cb.checked = false;
+    });
+  }
+
+  document.getElementById('fuzzyForm').addEventListener('submit', function(e) {
+    const inputCheckboxes = document.querySelectorAll('#inputsOptions input[type="checkbox"]:checked');
+    if (inputCheckboxes.length < 2) {
+      e.preventDefault();
+      alert('Please select at least 2 input columns.');
+    }
+  });
+
+  document.addEventListener('DOMContentLoaded', function() {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
+      return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+    {% if show_rule_form %}
+    addRuleRow(); // Add one rule row by default
+    {% endif %}
+    // Set selected defuzzification method if defined
+    {% if defuzz_method %}
+    document.getElementById('defuzzMethod').value = '{{ defuzz_method }}';
+    {% endif %}
+  });
+
+  // List of all available input columns (from Jinja2 template)
+  const allColumns = {% if input_columns %}{{ input_columns | tojson }}{% else %}[]{% endif %};
+
+  function addRuleRow() {
+    const container = document.getElementById('ruleContainer');
+    const ruleIndex = container.children.length;
+    const row = document.createElement('div');
+    row.className = 'rule-row';
+    row.setAttribute('data-rule-index', ruleIndex);
+    row.innerHTML = `
+      <select name="rule_column_${ruleIndex}_0" onchange="updateColumnOptions(${ruleIndex}, 0)" required>
+        <option value="" disabled selected>Select column</option>
+        ${allColumns.map(col => `<option value="${col}">${col}</option>`).join('')}
+      </select>
+      <select name="rule_term_${ruleIndex}_0" required>
+        <option value="" disabled selected>Select term</option>
+        <option value="poor">Poor</option>
+        <option value="average">Average</option>
+        <option value="good">Good</option>
+      </select>
+      <select name="rule_operator_${ruleIndex}_0" onchange="updateRuleRow(this, ${ruleIndex}, 0)" required>
+        <option value="" disabled selected>Select operator</option>
+        <option value="|">Or</option>
+        <option value="&">And</option>
+        <option value="=">Equals</option>
+      </select>
+      <div class="rule-extension" data-extension-for="${ruleIndex}_0"></div>
+    `;
+    container.appendChild(row);
+  }
+
+  function updateRuleRow(select, ruleIndex, depth) {
+    const operator = select.value;
+    const extension = select.parentElement.querySelector(`[data-extension-for="${ruleIndex}_${depth}"]`);
+    extension.innerHTML = '';
+
+    if (operator === '=') {
+      extension.innerHTML = `
+        <select name="rule_consequent_${ruleIndex}" required>
+          <option value="" disabled selected>Select output term</option>
+          <option value="low">Low</option>
+          <option value="medium">Medium</option>
+          <option value="high">High</option>
+        </select>
+      `;
+    } else if (operator === '|' || operator === '&') {
+      const nextDepth = depth + 1;
+      // Get currently selected columns in this rule
+      const selectedColumns = getSelectedColumns(ruleIndex);
+      // Filter out selected columns for the new dropdown
+      const availableColumns = allColumns.filter(col => !selectedColumns.includes(col));
+      extension.innerHTML = `
+        <div class="rule-row" data-rule-index="${ruleIndex}" data-depth="${nextDepth}">
+          <select name="rule_column_${ruleIndex}_${nextDepth}" onchange="updateColumnOptions(${ruleIndex}, ${nextDepth})" required>
+            <option value="" disabled selected>Select column</option>
+            ${availableColumns.map(col => `<option value="${col}">${col}</option>`).join('')}
+          </select>
+          <select name="rule_term_${ruleIndex}_${nextDepth}" required>
+            <option value="" disabled selected>Select term</option>
+            <option value="poor">Poor</option>
+            <option value="average">Average</option>
+            <option value="good">Good</option>
+          </select>
+          <select name="rule_operator_${ruleIndex}_${nextDepth}" onchange="updateRuleRow(this, ${ruleIndex}, ${nextDepth})" required>
+            <option value="" disabled selected>Select operator</option>
+            <option value="|">Or</option>
+            <option value="&">And</option>
+            <option value="=">Equals</option>
+          </select>
+          <div class="rule-extension" data-extension-for="${ruleIndex}_${nextDepth}"></div>
+        </div>
+      `;
+    }
+  }
+
+  // New function to get all selected columns in a rule
+  function getSelectedColumns(ruleIndex) {
+    const ruleRow = document.querySelector(`.rule-row[data-rule-index="${ruleIndex}"]`);
+    const columnSelects = ruleRow.querySelectorAll(`select[name^="rule_column_${ruleIndex}_"]`);
+    const selectedColumns = [];
+    columnSelects.forEach(select => {
+      if (select.value) {
+        selectedColumns.push(select.value);
+      }
+    });
+    return selectedColumns;
+  }
+
+  // New function to update column dropdowns in a rule
+  function updateColumnOptions(ruleIndex, currentDepth) {
+    const ruleRow = document.querySelector(`.rule-row[data-rule-index="${ruleIndex}"]`);
+    const selectedColumns = getSelectedColumns(ruleIndex);
+    const columnSelects = ruleRow.querySelectorAll(`select[name^="rule_column_${ruleIndex}_"]`);
+
+    columnSelects.forEach((select, index) => {
+      const depth = parseInt(select.name.match(/rule_column_${ruleIndex}_(\d+)/)[1]);
+      if (depth > currentDepth) {
+        // Preserve the current selection
+        const currentValue = select.value;
+        // Get available columns (all columns minus selected ones, excluding the current select's value)
+        const availableColumns = allColumns.filter(col => !selectedColumns.includes(col) || col === currentValue);
+        // Update options
+        select.innerHTML = `
+          <option value="" disabled ${!currentValue ? 'selected' : ''}>Select column</option>
+          ${availableColumns.map(col => `<option value="${col}" ${col === currentValue ? 'selected' : ''}>${col}</option>`).join('')}
+        `;
+      }
+    });
+  }
+
+  function collectRuleData() {
+    const rules = [];
+    const ruleRows = document.querySelectorAll('#ruleContainer .rule-row');
+
+    console.log("Total rule rows detected:", ruleRows.length);
+
+    ruleRows.forEach((row) => {
+      const ruleIndex = row.getAttribute('data-rule-index');
+      let ruleParts = [];
+      let currentDepth = 0;
+      let currentRow = row;
+
+      console.log(`Processing rule index ${ruleIndex}`);
+
+      while (currentRow) {
+        const columnSelect = currentRow.querySelector(`select[name="rule_column_${ruleIndex}_${currentDepth}"]`);
+        const termSelect = currentRow.querySelector(`select[name="rule_term_${ruleIndex}_${currentDepth}"]`);
+        const operatorSelect = currentRow.querySelector(`select[name="rule_operator_${ruleIndex}_${currentDepth}"]`);
+
+        if (!columnSelect || !termSelect || !operatorSelect) {
+          console.log(`Missing selects for rule ${ruleIndex} at depth ${currentDepth}`);
+          break;
+        }
+
+        const column = columnSelect.value;
+        const term = termSelect.value;
+        const operator = operatorSelect.value;
+
+        if (!column || !term || !operator) {
+          console.log(`Incomplete data for rule ${ruleIndex} at depth ${currentDepth}`);
+          break;
+        }
+
+        ruleParts.push(column, term, operator);
+        console.log(`Rule ${ruleIndex}, Depth ${currentDepth}:`, { column, term, operator });
+
+        if (operator === '=') {
+          const consequentSelect = document.querySelector(`select[name="rule_consequent_${ruleIndex}"]`);
+          if (consequentSelect && consequentSelect.value) {
+            ruleParts.push(consequentSelect.value);
+            console.log(`Consequent for rule ${ruleIndex}:`, consequentSelect.value);
+          } else {
+            console.log(`No valid consequent for rule ${ruleIndex}`);
+            ruleParts = [];
+          }
+          break;
+        }
+
+        currentDepth++;
+        currentRow = currentRow.querySelector(`[data-extension-for="${ruleIndex}_${currentDepth - 1}"] > .rule-row`);
+      }
+
+      if (ruleParts.length >= 4 && ruleParts[ruleParts.length - 2] === '=') {
+        rules.push(ruleParts.join(','));
+        console.log(`Rule ${ruleIndex} collected:`, ruleParts.join(','));
+      } else {
+        console.log(`Rule ${ruleIndex} incomplete, discarded`);
+      }
+    });
+
+    let ruleInput = document.getElementById('rule_conditions');
+    if (!ruleInput) {
+      ruleInput = document.createElement('input');
+      ruleInput.type = 'hidden';
+      ruleInput.id = 'rule_conditions';
+      ruleInput.name = 'rule_conditions[]';
+      document.getElementById('ruleForm').appendChild(ruleInput);
+    }
+    ruleInput.value = rules.join(';');
+    console.log("Final rules collected:", rules);
+    return rules;
+  }
+
+  document.getElementById('ruleForm').addEventListener('submit', function(e) {
+    const rules = collectRuleData();
+    console.log("Rules on submit:", rules, "Length:", rules.length);
+    if (rules.length < 2) {
+      e.preventDefault();
+      alert('Please define at least 2 rules.');
+    }
+  });
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

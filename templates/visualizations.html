@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Graph Layout</title>
+  <style>
+    :root {
+      --primary: #0d6efd;
+      --axis-color: #343a40;
+      --bg: #f8f9fa;
+      --card-bg: #ffffff;
+      --border-radius: 12px;
+      --shadow: 0 6px 20px rgba(0,0,0,0.08);
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: var(--bg);
+      padding: 40px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .plot-container {
+      width: 1400px;
+      height: 600px;
+      background: var(--card-bg);
+      border: 2px solid var(--axis-color);
+      position: relative;
+      border-radius: var(--border-radius);
+      padding: 60px;
+      box-shadow: var(--shadow);
+    }
+
+    .x-axis, .y-axis {
+      position: absolute;
+      background-color: var(--axis-color);
+      border-radius: 2px;
+    }
+
+    .x-axis {
+      width: 912px;
+      height: 4px;
+      bottom: 230px;
+      left: 20%;
+    }
+
+    .y-axis {
+      height: 427.5px;
+      width: 4px;
+      bottom: 230px;
+      left: 20%;
+    }
+
+.y-controls {
+  position: absolute;
+  top: 200px;
+  left: 50px;
+  transform: none;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  background: #fff;
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.x-controls {
+  position: absolute;
+  bottom: 200px;
+  left: 36%;
+  transform: translateY(100%);
+  display: flex;
+  gap: 40px;
+  background: #fff;
+  padding: 15px 25px;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      min-width: 180px;
+    }
+
+    label {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: #212529;
+    }
+
+    select, input {
+      padding: 8px 10px;
+      font-size: 14px;
+      border: 1px solid #ced4da;
+      border-radius: 6px;
+      transition: border 0.2s;
+    }
+
+    select:focus, input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(13,110,253,0.2);
+    }
+
+    @media (max-width: 768px) {
+      .plot-container {
+        width: 95%;
+        height: auto;
+        padding: 40px 20px;
+      }
+
+      .x-controls, .y-controls {
+        flex-direction: column;
+        position: static;
+        transform: none;
+        margin-top: 20px;
+        box-shadow: none;
+        padding: 0;
+        background: none;
+      }
+
+      .x-controls {
+        align-items: center;
+        justify-content: center;
+      }
+
+      .form-group {
+        width: 100%;
+        max-width: 300px;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="plot-container">
+  <!-- Y Axis -->
+  <div class="y-axis"></div>
+
+  <!-- X Axis -->
+  <div class="x-axis"></div>
+
+  <!-- Y Axis Controls -->
+  <div class="y-controls">
+    <div class="form-group">
+      <label for="y-label">Y-Axis Label</label>
+      <input type="text" id="y-label" placeholder="e.g. Salary ($)">
+    </div>
+    <div class="form-group">
+      <label for="y-column">Y-Axis Column</label>
+      <select id="y-column">
+        <option value="">Select column</option>
+        <option>Salary</option>
+        <option>Experience</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- X Axis Controls -->
+  <div class="x-controls">
+    <div class="form-group">
+      <label for="x-label">X-Axis Label</label>
+      <input type="text" id="x-label" placeholder="e.g. Age (years)">
+    </div>
+        <div class="form-group">
+      <label for="x-column">X-Axis Column</label>
+      <select id="x-column">
+        <option value="">Select column</option>
+        <option>Age</option>
+        <option>Department</option>
+      </select>
+    </div>
+  </div>
+  
+</div>
+
+</body>
+</html>

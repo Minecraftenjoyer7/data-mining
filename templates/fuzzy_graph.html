@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fuzzy Logic Input and Graph</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+  <style>
+    body {
+      background-color: #f4f5f7;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 50px auto;
+    }
+
+    .card {
+      border-radius: 12px;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+      padding: 30px;
+      background: #fff;
+    }
+
+    .metric-card {
+      border: 1px solid #b2ebf2;
+      border-radius: 10px;
+      padding: 20px;
+      background: #ced6d8;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      transition: transform 0.2s ease;
+    }
+
+    .metric-card:hover {
+      transform: translateY(-3px);
+    }
+
+    .metric-card h6 {
+      font-weight: 600;
+      margin-bottom: 10px;
+      color: #007c91;
+    }
+
+    input[type="number"] {
+      width: 100%;
+      padding: 10px;
+      font-size: 15px;
+      border-radius: 6px;
+      border: 1px solid #ced4da;
+      background-color: #f1f3f5;
+    }
+
+    input[type="number"]:focus {
+      border-color: #0d6efd;
+      box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.2);
+      outline: none;
+    }
+
+    .scroll-square {
+      height: 500px;
+      overflow: auto;
+      background: white;
+      border-radius: 0.5rem;
+      border: 1px solid #dee2e6;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.05);
+      padding: 10px;
+      text-align: center;
+    }
+
+    #arrows-text {
+      text-align: center;
+      font-size: 20px;
+      margin-top: 50px;
+      color: #333;
+    }
+
+    #arrows-text > a {
+      text-decoration: none;
+      color: #0d6efd;
+    }
+
+    #arrows-text > a:hover {
+      color: #0056b3;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        margin: 20px;
+      }
+
+      .scroll-square {
+        height: 300px;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="card">
+    <h3 class="card-title text-center mb-4">Enter Input Values for Fuzzy System</h3>
+    <form id="graphForm" method="POST" action="{{ url_for('fuzzy_graph') }}">
+      <div class="row">
+        {% for antecedent in antecedents %}
+        {% set metric = metrics | selectattr('column', 'equalto', antecedent) | first %}
+        <div class="col-md-4 mb-4">
+          <div class="metric-card">
+            <label for="{{ antecedent }}" class="form-label">{{ antecedent }}</label>
+            <input type="number" step="any" class="form-control"
+                   id="{{ antecedent }}" name="{{ antecedent }}"
+                   min="{{ metric.min }}" max="{{ metric.max }}"
+                   value="{{ user_inputs[antecedent] if user_inputs[antecedent] is defined else metric.avg | round(2) }}"
+                   required>
+            <div class="mt-2">
+              <p class="mb-1"><strong>Min:</strong> {{ metric.min }}</p>
+              <p class="mb-1"><strong>Avg:</strong> {{ metric.avg | round(2) }}</p>
+              <p class="mb-0"><strong>Max:</strong> {{ metric.max }}</p>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      <div class="text-center mt-4">
+        <button type="submit" class="btn btn-success px-4">Compute</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="mt-4 card">
+    <h5 class="card-title text-center mb-3">Fuzzy Output Graph</h5>
+    <div class="scroll-square">
+      {% if graph %}
+      <img src="data:image/png;base64,{{ graph }}" class="img-fluid" alt="Output Membership Function">
+      <p class="mt-3"><strong>Predicted {{ output_column }} ({{ defuzz_method | capitalize }}): </strong>{{ result }}</p>
+      <div class="text-center mt-3">
+        <button type="button" class="btn btn-outline-primary" onclick="saveGraph()">📥 Save Graph</button>
+        <span id="saveStatus" style="margin-left:10px; font-weight: bold;"></span>
+      </div>
+      {% else %}
+      <p>Your graph will appear here after input submission.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div id="arrows-text" class="mt-5">
+    <a href="{{ url_for('fuzzy') }}">back ➔</a>
+    <span>       </span>
+    <a href="{{ url_for('fuzzy') }}">fuzzy ➔</a>
+    <span>       </span>
+    <a href="{{ url_for('visualization_method') }}">Visualization ➔</a>
+  </div>
+</div>
+
+<script>
+  function saveGraph() {
+    fetch("{{ url_for('save_graphs') }}", { method: "POST" })
+      .then(res => res.json())
+      .then(result => {
+        const btn = document.querySelector("button[onclick='saveGraph()']");
+        const status = document.getElementById("saveStatus");
+        if (result === true) {
+          btn.disabled = true;
+          btn.innerText = "Graph Saved Successfully";
+          status.innerText = "";
+        } else if (result === false) {
+          btn.disabled = true;
+          btn.innerText = "Already Saved";
+          status.innerText = "";
+        } else if (result.error) {
+          status.innerText = "Error: " + result.error;
+        }
+      })
+      .catch(err => {
+        document.getElementById("saveStatus").innerText = "Error: " + err;
+        console.error("Save error:", err);
+      });
+  }
+
+  document.getElementById('graphForm').addEventListener('submit', function(e) {
+    const inputs = document.querySelectorAll('input[type="number"]');
+    for (let input of inputs) {
+      const min = parseFloat(input.min);
+      const max = parseFloat(input.max);
+      const value = parseFloat(input.value);
+      if (isNaN(value) || value < min || value > max) {
+        e.preventDefault();
+        alert(`Value for ${input.name} must be between ${min} and ${max}`);
+        return;
+      }
+    }
+  });
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

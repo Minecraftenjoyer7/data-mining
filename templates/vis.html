@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Graph Layout</title>
+  <style>
+    :root {
+      --primary: #0d6efd;
+      --axis-color: #343a40;
+      --bg: #f8f9fa;
+      --card-bg: #ffffff;
+      --border-radius: 12px;
+      --shadow: 0 6px 20px rgba(0,0,0,0.08);
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: var(--bg);
+      padding: 40px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .plot-container {
+      width: 1400px;
+      height: 600px;
+      background: var(--card-bg);
+      border: 2px solid var(--axis-color);
+      position: relative;
+      border-radius: var(--border-radius);
+      padding: 60px;
+      box-shadow: var(--shadow);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .x-axis, .y-axis {
+      position: absolute;
+      background-color: var(--axis-color);
+      border-radius: 2px;
+    }
+
+    .x-axis {
+      width: 912px;
+      height: 4px;
+      bottom: 230px;
+      left: 20%;
+    }
+
+    .y-axis {
+      height: 427.5px;
+      width: 4px;
+      bottom: 230px;
+      left: 20%;
+    }
+
+    .graph-container {
+      position: absolute;
+      bottom: 234px; /* Just below the X-axis */
+      left: 8%; /* Slightly right of the Y-axis */
+      width: 1300px; /* Match the X-axis width */
+      height: 400px; /* Match the Y-axis height minus some padding */
+      overflow: hidden;
+    }
+
+    .graph-container img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .y-controls {
+      position: absolute;
+      top: 200px;
+      left: 50px;
+      transform: none;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      background: #fff;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    .x-controls {
+      position: absolute;
+      bottom: 200px;
+      left: 36%;
+      transform: translateY(100%);
+      display: flex;
+      gap: 40px;
+      background: #fff;
+      padding: 15px 25px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    .color-controls {
+      position: absolute;
+      top: 100px;
+      right: 50px;
+      transform: none;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      background: #fff;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+      width: 200px;
+    }
+
+    .hue-controls {
+      position: absolute;
+      top: 340px;
+      right: 50px;
+      transform: none;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      background: #fff;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+      width: 200px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      min-width: 180px;
+      position: relative;
+    }
+
+    label {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: #212529;
+    }
+
+    input {
+      padding: 8px 10px;
+      font-size: 14px;
+      border: 1px solid #ced4da;
+      border-radius: 6px;
+      transition: border 0.2s;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(13,110,253,0.2);
+    }
+
+    .custom-select {
+      position: relative;
+    }
+
+    .select-display {
+      padding: 8px 10px;
+      max-width: 192px;
+      font-size: 14px;
+      border: 1px solid #ced4da;
+      border-radius: 6px;
+      cursor: pointer;
+      background: #fff;
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      min-height: 36px;
+    }
+
+    .select-display::after {
+      content: '▼';
+      font-size: 12px;
+      color: #666;
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    .select-options {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: #fff;
+      border: 1px solid #ced4da;
+      border-radius: 6px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      z-index: 10;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .select-options.active {
+      display: block;
+    }
+
+    .option-group {
+      border-bottom: 1px solid #eee;
+    }
+
+    #btn_confirm {
+      width: 100px;
+      height: 40px;
+      margin-top: 590px;
+      margin-left: 580px;
+      border-radius: 10px;
+      border: none;
+      background-color: #0d6efd;
+      font-size: 15px;
+      color: white;
+    }
+
+    .option-group:last-child {
+      border-bottom: none;
+    }
+
+    .column-option {
+      padding: 8px 10px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .column-option:hover {
+      background: #f0f0f0;
+    }
+
+    .column-option::after {
+      content: '▶';
+      font-size: 12px;
+      color: #666;
+    }
+
+    .agg-options {
+      display: none;
+      background: #f8f9fa;
+      padding-left: 20px;
+    }
+
+    .agg-options.active {
+      display: block;
+    }
+
+    .agg-option {
+      padding: 8px 10px;
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    .agg-option:hover {
+      background: #e9ecef;
+    }
+
+    .agg-option input[type="checkbox"] {
+      margin-right: 8px;
+    }
+
+    .agg-option label {
+      margin: 0;
+      font-weight: normal;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    select, input {
+      padding: 8px 10px;
+      font-size: 14px;
+      border: 1px solid #ced4da;
+      border-radius: 6px;
+      transition: border 0.2s;
+    }
+
+    select:focus, input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(13,110,253,0.2);
+    }
+
+    @media (max-width: 768px) {
+      .plot-container {
+        width: 95%;
+        height: auto;
+        padding: 40px 20px;
+        flex-direction: column;
+      }
+
+      .x-controls, .y-controls, .color-controls, .hue-controls {
+        flex-direction: column;
+        position: static;
+        transform: none;
+        margin-top: 20px;
+        box-shadow: none;
+        padding: 0;
+        background: none;
+        width: 100%;
+      }
+
+      .x-controls {
+        align-items: center;
+        justify-content: center;
+      }
+
+      .color-controls {
+        right: auto;
+        top: auto;
+      }
+
+      .hue-controls {
+        right: auto;
+        top: auto;
+      }
+
+      .select-options {
+        position: static;
+        width: 100%;
+        margin-top: 5px;
+      }
+
+      .graph-container {
+        position: static;
+        width: 100%;
+        height: auto;
+        margin-top: 20px;
+      }
+
+      #btn_confirm {
+        margin-left: auto;
+        margin-right: auto;
+        display: block;
+      }
+    }
+            #arrows-text {
+        text-align: center;
+        font-size: 22px;
+        font-weight: bold;
+        margin-top: 50px;
+        color: #333;
+        decoration:none;
+      }
+   #arrows-text > a{
+      text-decoration:none;
+    }
+    #saveBtn{
+      width: 130px;
+      height: 40px;
+      margin-top: 590px;
+      margin-left: 0px;
+      border-radius: 10px;
+      border: none;
+      font-size: 15px;
+      background-color: #0d6efd;
+      color: white;
+      align-self: flex-start;
+
+    }
+    </style>
+</head>
+<body>
+<div class="page-wrapper">
+
+<div class="plot-container">
+  <!-- Y Axis -->
+  <div class="y-axis"></div>
+
+  <!-- X Axis -->
+  <div class="x-axis"></div>
+
+  <!-- Graph Container -->
+  <div class="graph-container">
+    {% if graph %}
+      <img src="data:image/png;base64,{{ graph }}" alt="Bar Chart">
+    {% else %}
+      <p></p>
+    {% endif %}
+  </div>
+
+  <form method="post" action="{{ url_for('xy_graphs', chart=method) }}">
+    <!--==================================== Y controls ========================================-->
+    {% if method in ["multi_set_bar", "stacked_bar"] %}
+    <!-- Y Axis Controls multiple agg -->
+    <div class="y-controls">
+      <div class="form-group">
+        <label for="y-label">Y-Axis Label</label>
+        <input type="text" id="y-label" name="y-label" placeholder="e.g. Salary ($)">
+      </div>
+      <div class="form-group">
+        <label>Y-Axis Column</label>
+        <div class="custom-select" id="y-custom-select">
+          <div class="select-display" onclick="toggleSelect('y')">Select column</div>
+          <div class="select-options" id="y-options">
+            {% for col in y_columns %}
+            <div class="option-group">
+              <div class="column-option" onclick="toggleAggOptions('y', '{{col}}')">{{col}}</div>
+              <div class="agg-options" id="y-agg-{{col}}">
+                <div class="agg-option">
+                  <input type="checkbox" id="y-{{col}}-none" onchange="updateSelection('y')">
+                  <label for="y-{{col}}-none">None</label>
+                </div>
+                <div class="agg-option">
+                  <input type="checkbox" id="y-{{col}}-count" onchange="updateSelection('y')">
+                  <label for="y-{{col}}-count">Count</label>
+                </div>
+                <div class="agg-option">
+                  <input type="checkbox" id="y-{{col}}-count_unique" onchange="updateSelection('y')">
+                  <label for="y-{{col}}-count_unique">Count Unique</label>
+                </div>
+                <div class="agg-option">
+                  <input type="checkbox" id="y-{{col}}-average" onchange="updateSelection('y')">
+                  <label for="y-{{col}}-average">Average</label>
+                </div>
+                <div class="agg-option">
+                  <input type="checkbox" id="y-{{col}}-max" onchange="updateSelection('y')">
+                  <label for="y-{{col}}-max">Max</label>
+                </div>
+                <div class="agg-option">
+                  <input type="checkbox" id="y-{{col}}-min" onchange="updateSelection('y')">
+                  <label for="y-{{col}}-min">Min</label>
+                </div>
+                <div class="agg-option">
+                  <input type="checkbox" id="y-{{col}}-sum" onchange="updateSelection('y')">
+                  <label for="y-{{col}}-sum">Sum</label>
+                </div>
+                <div class="agg-option">
+                  <input type="checkbox" id="y-{{col}}-median" onchange="updateSelection('y')">
+                  <label for="y-{{col}}-median">Median</label>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        <input type="hidden" name="y-selections" id="y-selections-hidden">
+      </div>
+    </div>
+    {% elif method in ["bar"] %}
+    <!-- Y Axis Controls single agg -->
+    <div class="y-controls">
+      <div class="form-group">
+        <label for="y-label">Y-Axis Label</label>
+        <input type="text" id="y-label" name="y-label" placeholder="e.g. Salary ($)">
+      </div>
+      <div class="form-group">
+        <label>Y-Axis Column</label>
+        <div class="custom-select" id="y-custom-select">
+          <div class="select-display" onclick="toggleSelect('y')">Select column</div>
+          <div class="select-options" id="y-options">
+            {% for col in y_columns %}
+            <div class="option-group">
+              <div class="column-option" onclick="toggleAggOptions('y', '{{col}}')">{{col}}</div>
+              <div class="agg-options" id="y-agg-{{col}}">
+                <div class="agg-option" onclick="selectOption('y', '{{col}}', 'none')">None</div>
+                <div class="agg-option" onclick="selectOption('y', '{{col}}', 'count')">Count</div>
+                <div class="agg-option" onclick="selectOption('y', '{{col}}', 'count_unique')">Count Unique</div>
+                <div class="agg-option" onclick="selectOption('y', '{{col}}', 'average')">Average</div>
+                <div class="agg-option" onclick="selectOption('y', '{{col}}', 'max')">Max</div>
+                <div class="agg-option" onclick="selectOption('y', '{{col}}', 'min')">Min</div>
+                <div class="agg-option" onclick="selectOption('y', '{{col}}', 'sum')">Sum</div>
+                <div class="agg-option" onclick="selectOption('y', '{{col}}', 'median')">Median</div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        <input type="hidden" name="y-column" id="y-column-hidden">
+        <input type="hidden" name="y-agg" id="y-agg-hidden">
+      </div>
+    </div>
+    {% elif method in ["boxplot", "scatter"] %}
+    <!-- Y Axis Controls single no agg -->
+    <div class="y-controls">
+      <div class="form-group">
+        <label for="y-label">Y-Axis Label</label>
+        <input type="text" id="y-label" name="y-label" placeholder="e.g. Salary ($)">
+      </div>
+      <div class="form-group">
+        <label for="y-column">Y-Axis Column</label>
+        <select id="y-column" name="y-column">
+          <option disabled selected>Select column</option>
+          {% for col in y_columns %}
+          <option value="{{col}}">{{col}}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    {% endif %}
+
+    <!--==================================== X controls ========================================-->
+    {% if method in ["bar", "scatter", "histogram", "multi_set_bar", "stacked_bar", "boxplot"] %}
+    <!-- X Axis Controls single no agg -->
+    <div class="x-controls">
+      <div class="form-group">
+        <label for="x-label">X-Axis Label</label>
+        <input type="text" id="x-label" name="x-label" placeholder="e.g. Age (years)">
+      </div>
+      <div class="form-group">
+        <label for="x-column">X-Axis Column</label>
+        <select id="x-column" name="x-column">
+          <option disabled selected>Select column</option>
+          {% for col in x_columns %}
+          <option value="{{col}}">{{col}}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    {% endif %}
+
+    <!--==================================== Color controls ========================================-->
+    {% if method in ["bar", "scatter", "boxplot"] %}
+    <!-- Color Controls single agg -->
+    <div class="color-controls">
+      <div class="form-group">
+        <label for="color-label">Color Label</label>
+        <input type="text" id="color-label" name="color-label" placeholder="e.g. Age (avg)">
+      </div>
+      <div class="form-group">
+        <label>Color Column</label>
+        <div class="custom-select" id="color-custom-select">
+          <div class="select-display" onclick="toggleSelect('color')">Select column</div>
+          <div class="select-options" id="color-options">
+            {% for col in color_columns %}
+            <div class="option-group">
+              <div class="column-option" onclick="toggleAggOptions('color', '{{col}}')">{{col}}</div>
+              <div class="agg-options" id="color-agg-{{col}}">
+                <div class="agg-option" onclick="selectOption('color', '{{col}}', 'none')">None</div>
+                <div class="agg-option" onclick="selectOption('color', '{{col}}', 'count')">Count</div>
+                <div class="agg-option" onclick="selectOption('color', '{{col}}', 'count_unique')">Count Unique</div>
+                <div class="agg-option" onclick="selectOption('color', '{{col}}', 'average')">Average</div>
+                <div class="agg-option" onclick="selectOption('color', '{{col}}', 'max')">Max</div>
+                <div class="agg-option" onclick="selectOption('color', '{{col}}', 'min')">Min</div>
+                <div class="agg-option" onclick="selectOption('color', '{{col}}', 'sum')">Sum</div>
+                <div class="agg-option" onclick="selectOption('color', '{{col}}', 'median')">Median</div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        <input type="hidden" name="color-column" id="color-column-hidden">
+        <input type="hidden" name="color-agg" id="color-agg-hidden">
+      </div>
+    </div>
+    {% endif %}
+
+    <!--==================================== Hue controls ========================================-->
+    {% if method in ["bar", "scatter", "boxplot", "multi_set_bar", "histogram","stacked_bar"] %}
+    <div class="hue-controls">
+      <div class="form-group">
+        <label for="hue-column">Hue Column</label>
+        <select id="hue-column" name="hue-column">
+          <option value="">Select column</option>
+          {% for col in hue_columns %}
+          <option value="{{col}}">{{col}}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <input type="hidden" name="hue-column" id="hue-column-hidden">
+    </div>
+    {% endif %}
+    <!--=============================================================================================-->
+    <button id="btn_confirm" type="submit">Confirm</button>
+  </form>
+  {% if graph %}
+  <div style="width: 100%; text-align: left; padding-left: 20px;">
+        <button type="button" class="btn btn-outline-primary" id="saveBtn" onclick="saveGraph()">📥 Save Graph</button>
+  </div>
+  {% endif %}
+</div>
+  <div id="arrows-text">
+      <a href="{{url_for('download_pdf')}}">Download pdf ➔</a>
+     <span>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</span>
+      <a href="{{url_for('download_dataset')}}">Download dataset ➔</a>
+  </div>
+</div>
+<script>
+  function toggleSelect(axis) {
+    const options = document.getElementById(`${axis}-options`);
+    options.classList.toggle('active');
+  }
+
+  function toggleAggOptions(axis, column) {
+    const aggOptions = document.getElementById(`${axis}-agg-${column}`);
+    const isActive = aggOptions.classList.contains('active');
+    document.querySelectorAll(`#${axis}-options .agg-options`).forEach(opt => {
+      opt.classList.remove('active');
+    });
+    if (!isActive) {
+      aggOptions.classList.add('active');
+    }
+  }
+  function updateSelection(axis) {
+      const selections = [];
+      const columnAggs = {}; // Object to store all aggregations per column
+
+      // Collect all checked aggregations for each column
+      const checkboxes = document.querySelectorAll(`#${axis}-options input[type="checkbox"]:checked`);
+      checkboxes.forEach(checkbox => {
+          const id = checkbox.id;
+          const [, column, agg] = id.split('-');
+          if (agg !== 'none') { // Ignore 'none' aggregation
+              if (!columnAggs[column]) {
+                  columnAggs[column] = [];
+              }
+              columnAggs[column].push(agg);
+          }
+      });
+
+      // Convert columnAggs to the selections format
+      for (const column in columnAggs) {
+          columnAggs[column].forEach(agg => {
+              selections.push({ column: column, agg: agg });
+          });
+      }
+
+      const display = document.querySelector(`#${axis}-custom-select .select-display`);
+      if (selections.length > 0) {
+          display.textContent = selections.map(sel => `${sel.column} (${sel.agg})`).join(', ');
+      } else {
+          display.textContent = 'Select column';
+      }
+
+      const hiddenInput = document.getElementById(`${axis}-selections-hidden`);
+      hiddenInput.value = JSON.stringify(selections);
+  }
+
+  // Ensure initialization and update before submission
+  document.addEventListener('DOMContentLoaded', function() {
+      updateSelection('y'); // Initialize the hidden input
+  });
+
+  document.querySelector('form').addEventListener('submit', function(event) {
+      updateSelection('y'); // Ensure the latest selections are saved before submission
+  });
+
+  function selectOption(axis, column, agg) {
+    const display = document.querySelector(`#${axis}-custom-select .select-display`);
+    if (agg === 'none') {
+      display.textContent = column;
+    } else {
+      display.textContent = `${column} (${agg})`;
+    }
+
+    document.getElementById(`${axis}-column-hidden`).value = column;
+    document.getElementById(`${axis}-agg-hidden`).value = agg;
+
+    const options = document.getElementById(`${axis}-options`);
+    options.classList.remove('active');
+    document.querySelectorAll(`#${axis}-options .agg-options`).forEach(opt => {
+      opt.classList.remove('active');
+    });
+  }
+
+  // Sync select changes with hidden inputs
+  document.querySelectorAll('select[name]').forEach(select => {
+    select.addEventListener('change', function() {
+      const hiddenInput = document.getElementById(`${select.name}-hidden`);
+      if (hiddenInput) {
+        hiddenInput.value = this.value;
+      }
+    });
+  });
+
+  // Close dropdowns when clicking outside
+  document.addEventListener('click', function(event) {
+    const selects = ['y', 'x', 'color'];
+    selects.forEach(axis => {
+      const select = document.getElementById(`${axis}-custom-select`);
+      if (!select) return;
+      const options = document.getElementById(`${axis}-options`);
+      if (!select.contains(event.target)) {
+        options.classList.remove('active');
+        document.querySelectorAll(`#${axis}-options .agg-options`).forEach(opt => {
+          opt.classList.remove('active');
+        });
+      }
+    });
+  });
+
+ function checkGraphInGraphs() {
+  fetch("/save_graphs", {
+    method: "GET"
+  })
+  .then(res => res.json())
+  .then(isNewGraph => {
+    const btn = document.getElementById("saveBtn");
+    btn.disabled = !isNewGraph;
+    btn.innerText = isNewGraph ? "Save Graph" : "Already saved";
+  })
+  .catch(err => console.error("Error:", err));
+}
+
+checkGraphInGraphs();  // Call on page load or after rendering graph
+
+function saveGraph() {
+  fetch("/save_graphs", {
+    method: "POST"
+  })
+  .then(res => res.json())
+  .then(result => {
+    const btn = document.getElementById("saveBtn");
+    if (result === true) {
+      btn.disabled = true;
+      btn.innerText = "graph Saved successfully";
+    } else if (result === false) {
+      btn.disabled = true;
+      btn.innerText = "saved";
+    } else if (result.error) {
+      alert("Error: " + result.error);
+    }
+  })
+  .catch(err => {
+    document.getElementById("saveStatus").innerText = "Error: " + err;
+    console.error("Save error:", err);
+  });
+}
+
+</script>
+</body>
+</html>

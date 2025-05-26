@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Graph Layout</title>
+  <style>
+    :root {
+      --primary: #0d6efd;
+      --axis-color: #343a40;
+      --bg: #f8f9fa;
+      --card-bg: #ffffff;
+      --border-radius: 12px;
+      --shadow: 0 6px 20px rgba(0,0,0,0.08);
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: var(--bg);
+      padding: 40px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .plot-container {
+      width: 1400px;
+      height: 600px;
+      background: var(--card-bg);
+      border: 2px solid var(--axis-color);
+      position: relative;
+      border-radius: var(--border-radius);
+      padding: 60px;
+      box-shadow: var(--shadow);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .x-axis, .y-axis {
+      position: absolute;
+      background-color: var(--axis-color);
+      border-radius: 2px;
+    }
+
+    .x-axis {
+      width: 912px;
+      height: 4px;
+      bottom: 230px;
+      left: 20%;
+    }
+
+    .y-axis {
+      height: 427.5px;
+      width: 4px;
+      bottom: 230px;
+      left: 20%;
+    }
+
+    .y-controls {
+      position: absolute;
+      top: 200px;
+      left: 50px;
+      transform: none;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      background: #fff;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    .x-controls {
+      position: absolute;
+      bottom: 200px;
+      left: 36%;
+      transform: translateY(100%);
+      display: flex;
+      gap: 40px;
+      background: #fff;
+      padding: 15px 25px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    .color-controls {
+      position: absolute;
+      top: 200px;
+      right: 50px;
+      transform: none;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      background: #fff;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+      width: 200px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      min-width: 180px;
+      position: relative;
+    }
+
+    label {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: #212529;
+    }
+
+    input {
+      padding: 8px 10px;
+      font-size: 14px;
+      border: 1px solid #ced4da;
+      border-radius: 6px;
+      transition: border 0.2s;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(13,110,253,0.2);
+    }
+
+    .custom-select {
+      position: relative;
+    }
+
+    .select-display {
+      padding: 8px 10px;
+      font-size: 14px;
+      border: 1px solid #ced4da;
+      border-radius: 6px;
+      cursor: pointer;
+      background: #fff;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .select-display::after {
+      content: '▼';
+      font-size: 12px;
+      color: #666;
+    }
+
+    .select-options {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: #fff;
+      border: 1px solid #ced4da;
+      border-radius: 6px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      z-index: 10;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .select-options.active {
+      display: block;
+    }
+
+    .option-group {
+      border-bottom: 1px solid #eee;
+    }
+
+    .option-group:last-child {
+      border-bottom: none;
+    }
+
+    .column-option {
+      padding: 8px 10px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .column-option:hover {
+      background: #f0f0f0;
+    }
+
+    .column-option::after {
+      content: '▶';
+      font-size: 12px;
+      color: #666;
+    }
+
+    .agg-options {
+      display: none;
+      background: #f8f9fa;
+      padding-left: 20px;
+    }
+
+    .agg-options.active {
+      display: block;
+    }
+
+    .agg-option {
+      padding: 8px 10px;
+      cursor: pointer;
+    }
+
+    .agg-option:hover {
+      background: #e0e0e0;
+    }
+
+    @media (max-width: 768px) {
+      .plot-container {
+        width: 95%;
+        height: auto;
+        padding: 40px 20px;
+        flex-direction: column;
+      }
+
+      .x-controls, .y-controls, .color-controls {
+        flex-direction: column;
+        position: static;
+        transform: none;
+        margin-top: 20px;
+        box-shadow: none;
+        padding: 0;
+        background: none;
+        width: 100%;
+      }
+
+      .x-controls {
+        align-items: center;
+        justify-content: center;
+      }
+
+      .color-controls {
+        right: auto;
+        top: auto;
+      }
+
+      .select-options {
+        position: static;
+        width: 100%;
+        margin-top: 5px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="plot-container">
+  <!-- Y Axis -->
+  <div class="y-axis"></div>
+
+  <!-- X Axis -->
+  <div class="x-axis"></div>
+
+  <!-- Y Axis Controls single agg-->
+  <div class="y-controls">
+    <div class="form-group">
+      <label for="y-label">Y-Axis Label</label>
+      <input type="text" id="y-label" placeholder="e.g. Salary ($)">
+    </div>
+    <div class="form-group">
+      <label>Y-Axis Column</label>
+      <div class="custom-select" id="y-custom-select">
+        <div class="select-display" onclick="toggleSelect('y')">Select column</div>
+        <div class="select-options" id="y-options">
+          {% for col in y_columns %}
+          <div class="option-group">
+            <div class="column-option" onclick="toggleAggOptions('y', '{{col}}')">{{col}}</div>
+            <div class="agg-options" id="y-agg-{{col}}">
+              <div class="agg-option" onclick="selectOption('y', '{{col}}', 'count')">Count</div>
+              <div class="agg-option" onclick="selectOption('y', '{{col}}', 'count_unique')">Count Unique</div>
+              <div class="agg-option" onclick="selectOption('y', '{{col}}', 'average')">Average</div>
+              <div class="agg-option" onclick="selectOption('y', '{{col}}', 'max')">Max</div>
+              <div class="agg-option" onclick="selectOption('y', '{{col}}', 'min')">Min</div>
+              <div class="agg-option" onclick="selectOption('y', '{{col}}', 'sum')">Sum</div>
+              <div class="agg-option" onclick="selectOption('y', '{{col}}', 'median')">Median</div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      <input type="hidden" name="y-column" id="y-column-hidden">
+      <input type="hidden" name="y-agg" id="y-agg-hidden">
+    </div>
+  </div>
+
+  <!-- X Axis Controls single agg-->
+  <div class="x-controls">
+    <div class="form-group">
+      <label for="x-label">X-Axis Label</label>
+      <input type="text" id="x-label" placeholder="e.g. Age (years)">
+    </div>
+    <div class="form-group">
+      <label>X-Axis Column</label>
+      <div class="custom-select" id="x-custom-select">
+        <div class="select-display" onclick="toggleSelect('x')">Select column</div>
+        <div class="select-options" id="x-options">
+        {% for col in y_columns %}
+          <div class="option-group">
+            <div class="column-option" onclick="toggleAggOptions('x', '{{col}}')">{{col}}</div>
+            <div class="agg-options" id="x-agg-{{col}}">
+              <div class="agg-option" onclick="selectOption('x', '{{col}}', 'count')">Count</div>
+              <div class="agg-option" onclick="selectOption('x', '{{col}}', 'count_unique')">Count Unique</div>
+              <div class="agg-option" onclick="selectOption('x', '{{col}}', 'average')">Average</div>
+              <div class="agg-option" onclick="selectOption('x', '{{col}}', 'max')">Max</div>
+              <div class="agg-option" onclick="selectOption('x', '{{col}}', 'min')">Min</div>
+              <div class="agg-option" onclick="selectOption('x', '{{col}}', 'sum')">Sum</div>
+              <div class="agg-option" onclick="selectOption('x', '{{col}}', 'median')">Median</div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      <input type="hidden" name="x-column" id="x-column-hidden">
+      <input type="hidden" name="x-agg" id="x-agg-hidden">
+    </div>
+  </div>
+
+  <!-- Color Controls single agg-->
+  <div class="color-controls">
+    <div class="form-group">
+      <label for="color-label">Color Label</label>
+      <input type="text" id="color-label" placeholder="e.g. Age (avg)">
+    </div>
+    <div class="form-group">
+      <label>Color Column</label>
+      <div class="custom-select" id="color-custom-select">
+        <div class="select-display" onclick="toggleSelect('color')">Select column</div>
+        <div class="select-options" id="color-options">
+          <div class="option-group">
+            <div class="column-option" onclick="toggleAggOptions('color', '{{col}}')">{{col}}</div>
+            <div class="agg-options" id="color-agg-{{col}}">
+              <div class="agg-option" onclick="selectOption('color', '{{col}}', 'count')">Count</div>
+              <div class="agg-option" onclick="selectOption('color', '{{col}}', 'count_unique')">Count Unique</div>
+              <div class="agg-option" onclick="selectOption('color', '{{col}}', 'average')">Average</div>
+              <div class="agg-option" onclick="selectOption('color', '{{col}}', 'max')">Max</div>
+              <div class="agg-option" onclick="selectOption('color', '{{col}}', 'min')">Min</div>
+              <div class="agg-option" onclick="selectOption('color', '{{col}}', 'sum')">Sum</div>
+              <div class="agg-option" onclick="selectOption('color', '{{col}}', 'median')">Median</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <input type="hidden" name="color-column" id="color-column-hidden">
+      <input type="hidden" name="color-agg" id="color-agg-hidden">
+    </div>
+  </div>
+
+  <script>
+    function toggleSelect(axis) {
+      const options = document.getElementById(`${axis}-options`);
+      options.classList.toggle('active');
+    }
+
+    function toggleAggOptions(axis, column) {
+      const aggOptions = document.getElementById(`${axis}-agg-${column}`);
+      const isActive = aggOptions.classList.contains('active');
+      // Close all other agg options
+      document.querySelectorAll(`#${axis}-options .agg-options`).forEach(opt => {
+        opt.classList.remove('active');
+      });
+      // Toggle the clicked column's agg options
+      if (!isActive) {
+        aggOptions.classList.add('active');
+      }
+    }
+
+    function selectOption(axis, column, agg) {
+      const display = document.querySelector(`#${axis}-custom-select .select-display`);
+      display.textContent = `${column} (${agg})`;
+      document.getElementById(`${axis}-options`).classList.remove('active');
+      document.querySelectorAll(`#${axis}-options .agg-options`).forEach(opt => {
+        opt.classList.remove('active');
+      });
+      // Set hidden inputs for form submission
+      document.getElementById(`${axis}-column-hidden`).value = column;
+      document.getElementById(`${axis}-agg-hidden`).value = agg;
+    }
+
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', function(event) {
+      const selects = ['y', 'x', 'color'];
+      selects.forEach(axis => {
+        const select = document.getElementById(`${axis}-custom-select`);
+        const options = document.getElementById(`${axis}-options`);
+        if (!select.contains(event.target)) {
+          options.classList.remove('active');
+          document.querySelectorAll(`#${axis}-options .agg-options`).forEach(opt => {
+            opt.classList.remove('active');
+          });
+        }
+      });
+    });
+  </script>
+</body>
+</html>

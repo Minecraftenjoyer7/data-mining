@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Replace Interface + Wider Table</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background-color: #e5e5e5;
+      padding: 40px;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    .layout {
+      display: flex;
+      gap: 60px;
+      align-items: flex-start;
+    }
+
+    .replace-box {
+      flex: 1;
+      font-size: 16px;
+    }
+
+    .replace-box .form-line {
+      margin-bottom: 15px;
+    }
+
+    .replace-box input {
+      width: 100%;
+      padding: 12px;
+      border-radius: 6px;
+      border: 1px solid #ced4da;
+      font-size: 16px;
+    }
+
+    .scroll-square {
+      width: 600px; /* made it wider */
+      height: 400px;
+      overflow-y: auto;
+      background: white;
+      border-radius: 0.5rem;
+      border: 1px solid #dee2e6;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+      padding: 15px;
+    }
+
+    .mini-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 16px;
+    }
+
+    .mini-table th,
+    .mini-table td {
+      border: 1px solid #dee2e6;
+      padding: 14px;
+      text-align: center;
+      min-width: 200px; /* widen the column cells */
+    }
+
+    .mini-table th {
+      background-color: #f1f3f5;
+    }
+
+    .mini-table tbody tr:hover {
+      background-color: #f8f9fa;
+    }
+  </style>
+</head>
+<body>
+<form method="POST" action="">
+<div class="layout">
+  <div class="replace-box">
+    <div class="form-line"><strong>replace</strong></div>
+    <div class="form-line"><input type="text" name="old_value" placeholder="Enter value to replace" required></div>
+    <div class="form-line"><strong>with</strong></div>
+    <div class="form-line"><input type="text" name="new_value" placeholder="Enter new value (leave input empty if you want to remove value to replace)"></div>
+    <div class="form-line"><button class="btn btn-primary" type="submit">Apply</button></div>
+  </div>
+</form>
+  <div class="scroll-square">
+    <table class="mini-table">
+      <thead>
+        <tr><th>{{col_name}}(first 20 rows)</th></tr>
+      </thead>
+      <tbody>
+        {% for row in first_20_rows %}
+            <tr><td>{{row}}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Choose Your Algorithm</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #eef2f3, #8e9eab);
+      background-color: #dad9dd;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      min-height: 100vh;
+      padding-top: 50px;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    .card {
+      background-color: #fff;
+      padding: 30px 25px;
+      border: 2px solid #ccc;
+      border-radius: 12px;
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+      width: 320px;
+      text-align: center;
+    }
+
+    select {
+      width: 100%;
+      padding: 12px;
+      margin: 12px 0;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    button {
+      margin-top: 15px;
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    .note-box {
+      width: 60%;
+      margin: 40px auto 0;
+      background-color: #e3e8ed;
+      border-left: 5px solid #2196F3;
+      padding: 15px 20px;
+      font-size: 16px;
+      line-height: 1.5;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Select a Machine Learning Algorithm</h1>
+
+  <div class="card">
+    <select id="categorySelect">
+      <option value="supervised">Supervised Learning</option>
+      <option value="unsupervised">Unsupervised Learning</option>
+      <option value="fuzzy_logic">Fuzzy Logic</option>
+    </select>
+
+    <select id="algorithmSelect">
+
+    </select>
+
+    <button onclick="confirmSelection()">Confirm</button>
+  </div>
+
+  <div class="note-box" id="noteBox">
+    <strong>Note:</strong> Please select an algorithm to see more info.
+  </div>
+
+  <script>
+    const categorySelect = document.getElementById("categorySelect");
+    const algorithmSelect = document.getElementById("algorithmSelect");
+    const noteBox = document.getElementById("noteBox");
+
+    const options = {
+      supervised: ["KNN", "Decision Tree", "Linear Regression"],
+      unsupervised: ["KMeans", "KMedoids", "Hierarchical"],
+      fuzzy_logic:["Fuzzy Logic"]
+    };
+
+   const notes = {
+     "KNN": "Don’t use KNN with large datasets or many features — it gets slow and inaccurate. Good for clean, labeled, small data.",
+     "Decision Tree":  "Use when you want interpretability. Avoid when you need generalization — trees tend to overfit unless you prune them.",
+     "Linear Regression": "Linear Regression only works with numerical features and assumes a linear relationship. It struggles with outliers and doesn’t model complex patterns well.",
+     "KMeans": "Great for simple, numeric data with clear, round-shaped clusters. Avoid with noisy data or outliers.",
+     "KMedoids": "Use instead of KMeans when you have outliers or want better stability. But avoid if performance is critical — it’s slower.",
+     "Hierarchical": "Hierarchical Clustering is useful for exploring data without knowing the number of clusters, but it is memory-heavy and slow for large datasets.",
+     "Fuzzy Logic":" Good for 'maybe' situations (like 'a little hot'). Not for yes/no problems."
+   };
+
+    const algorithmResources = {
+      "KNN": "{{ url_for('choose_method',method = 'knn') }}",
+      "Decision Tree": "{{ url_for('choose_method',method = 'decision_tree') }}",
+      "Linear Regression": "{{ url_for('choose_method',method = 'linear_regression') }}",
+      "KMeans": "{{ url_for('choose_method',method = 'kmeans') }}",
+      "KMedoids": "{{ url_for('choose_method',method = 'kmedoids') }}",
+      "Hierarchical": "{{ url_for('choose_method',method = 'hierarchical_clustering') }}",
+      "Fuzzy Logic":"{{ url_for('choose_method',method = 'fuzzy') }}"
+    };
+
+
+    function updateAlgorithmOptions() {
+      const selectedCategory = categorySelect.value;
+      algorithmSelect.innerHTML = "";
+
+      options[selectedCategory].forEach(algorithm => {
+        const option = document.createElement("option");
+        option.textContent = algorithm;
+        algorithmSelect.appendChild(option);
+      });
+
+      updateNote(algorithmSelect.value);
+    }
+
+    function updateNote(selectedAlgorithm) {
+      if (notes[selectedAlgorithm]) {
+         noteBox.innerHTML = `<strong>Note:</strong> ${notes[selectedAlgorithm]}`;
+      } else {
+        noteBox.innerHTML = `<strong>Note:</strong> Please select an algorithm to see more info.`;
+      }
+    }
+
+
+    function confirmSelection() {
+      const selectedAlgorithm = algorithmSelect.value;
+      if (algorithmResources[selectedAlgorithm]) {
+        window.location.href = algorithmResources[selectedAlgorithm];
+      }
+    }
+
+
+    categorySelect.addEventListener("change", () => {
+      updateAlgorithmOptions();
+    });
+
+    algorithmSelect.addEventListener("change", () => {
+      updateNote(algorithmSelect.value);
+    });
+    updateAlgorithmOptions();
+  </script>
+
+</body>
+</html>

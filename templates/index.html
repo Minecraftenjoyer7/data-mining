@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dataset presentation</title>
+  <style>
+    body {
+      background-color: #dad9dd;
+    }
+    .data-analysis-text {
+        text-align: center;
+        font-size: 22px;
+        font-weight: bold;
+        margin-top: 50px;
+        color: #333;
+        decoration:none;
+      }
+     .data-analysis-text > a{
+        text-decoration:none;
+      }
+
+    .scroll-square {
+      width: 660px;
+      height: 295px;
+      overflow: auto;
+      background: white;
+      border-radius: 0.5rem;
+      border: 1px solid #dee2e6;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.05);
+      padding: 10px;
+    }
+
+    .big-table {
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .big-table th,
+    .big-table td {
+      border: 1px solid #dee2e6;
+      padding: 6px 8px;
+      text-align: center;
+      vertical-align: middle;
+    }
+
+    .big-table th {
+      background-color: #f8f9fa;
+      font-weight: 600;
+    }
+
+    table th,
+    table td {
+      border: 1px solid #666;
+      padding: 3px;
+      background: #fff;
+      text-align: center;
+    }
+
+    table th {
+      background-color: #ddd;
+    }
+
+    .big-table tbody tr:hover {
+      background-color: #f1f3f5;
+      transition: background-color 0.2s ease;
+    }
+
+    .content {
+      flex: 2;
+      padding-left: 40px;
+    }
+
+    h2 {
+      margin-top: 0;
+    }
+    #d2{
+      padding-left: 10px;
+    }
+
+
+    .tooltip {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+}
+    #ab{
+    color: inherit;
+    text-decoration:inherit
+    }
+  </style>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+
+<div class="container my-5">
+    <div class="row align-items-center mb-5" >
+      <div class="col" style="padding-right: 80px;">
+        <div class="scroll-square">
+          <table class="big-table" style="width:{{width}}px;">
+          <thead>
+            <tr>
+              {% for col in cols%}
+                <th>{{col}}</th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+          {%for i in range(0,10)%}
+            <tr>
+              {% for col in cols %}
+                <td>{{table.iloc[i][col]}}</td>
+              {% endfor %}
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+        </div>
+      </div>
+      <div class="col" style="padding-left: 80px;">
+        <h2>{{pass}}</h2>
+        <p class="text-muted">Table Status: </p>
+        <ul class="list-group">
+          <li class="list-group-item">Dataset Name: {{name}}</li>
+          <li class="list-group-item">Rows: {{rows}}</li>
+          <li class="list-group-item">Columns: {{table.shape[1]}}</li>
+          <li class="list-group-item">total nan values: {{total_nan_values}}</li>
+          <li class="list-group-item">size: {{size}} MB</li>
+          <li class="list-group-item">extension: {{extension}}</li>
+        </ul>
+        <div class="mt-3">
+        </div>
+      </div>
+    </div>
+
+  <hr>
+
+      <ul class="nav nav-underline">
+          <li class="nav-item">
+            <a class="nav-link" href="{{url_for('home',item_name = 'all')}}">All</a>
+          </li>
+          {% for col in cols%}
+             <li class="nav-item">
+               <a class="nav-link" href="{{url_for('home',item_name = col)}}">{{col}}</a>
+             </li>
+        {% endfor %}
+      </ul>
+
+        <div class="tab-content" id="nav-tabContent">
+        </div>
+
+
+    <div class="card shadow-lg p-4">
+      <h3 class="card-title text-center mb-4">{{item_name}}</h3>
+      <form action="{{url_for('data_cleaning',col_name = item_name)}}" method="post">
+          <div class="row">
+          <div class="col-md-6 mb-3">
+          <label class="form-label"><a class="nav-link" href="{{url_for('NAN_table',col_name = item_name)}}">NAN values</a></label>
+            <div class="input-group">
+              <input type="text" class="form-control rounded-end" id="nanInput" name="nan_value" placeholder="{{ 'There are no NAN values' if not hasNan else 'Replacement value' }}" disabled>
+              <div class="col-sm-3">
+                <select class="form-select ms-2" id="nanActionSelect" name="nan_action" {% if not hasNan %}disabled{% endif %}>
+                  <option selected disabled>Choose action...</option>
+                  <option value="keep" selected>Keep NAN</option>
+                  <option value="remove">Remove NAN</option>
+                  <option value="replace">Replace NAN</option>
+                  <option value="mean"{% if not col_datatype in ["int64","float64"] %}disabled{% endif %} >Replace with mean</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        {% if item_name == 'all'%}
+          <div class="col-md-6 mb-3">
+            <label class="form-label"><a class="nav-link" href="{{url_for('Duplicates_table')}}">Duplicates</a></label>
+                <select class="form-select ms-2" id="Duplicates" name="duplicate_action"  {% if not hasDuplicates %}disabled{% endif %}>
+                  <option selected disabled>Choose action...</option>
+                  <option value="keep_duplicates" selected>Keep Duplicates</option>
+                  <option value="remove_duplicates">Remove Duplicates</option>
+                </select>
+          </div>
+        </div>
+
+
+        <div class="mb-3">
+        <label class="form-label">First Column</label>
+        <select id="first_column" name="first_column" class="form-select" required>
+            <option selected disabled>Choose action...</option>
+            <option value="keep" selected>Keep First Column</option>
+            <option value="remove" >Remove first column (not recommended)</option>
+          </select>
+        </div>
+        {% else %}
+        <div class="col-md-6 mb-3">
+            <label class="form-label">{% if hasOutliers %}<a class="nav-link"  href="{{url_for('Outliers_graph',col_name = item_name)}}">Outliers</a>{% else %}Outliers{% endif %}</label>
+                <select class="form-select ms-2" id="outliersActionSelect" name="outliers_action" {% if not hasOutliers %}disabled{% endif %}>
+                  <option selected disabled>Choose action...</option>
+                  <option value="keep_outliers" selected>Keep Outliers</option>
+                  <option value="remove_outliers">Remove Outliers</option>
+                </select>
+          </div>
+
+        <div class="col-md-6 mb-3">
+            <label class="form-label">
+                <span data-bs-toggle="tooltip" title="{{col_datatype}}">Datatype</span>
+                (try <a href="{{url_for('replace_values',col_name = item_name)}}">replace</a> if datatype can't be converted)
+            </label>
+            <div class="input-group">
+              <select id="datatype_value" name="datatype_value" class="form-select rounded-end" disabled>
+                  <option disabled>Choose Datatype...</option>
+                  <option value="keep" selected>Dont convert datatype</option>
+                  <option value="int64">Integer</option>
+                  <option value="float64">Float</option>
+                  <option value="object">String</option>
+                  <option value="bool">Boolean</option>
+                  <option value="datetime64[ns]">Datetime</option>
+                  <option value="category">Category</option>
+              </select>
+              <div class="col-sm-3" id="d2">
+                <select id="col_datatype" name="col_datatype" class="form-select" required>
+                  <option disabled selected>Choose action...</option>
+                  <option value="keep" selected>Keep datatype</option>
+                  <option value="convert">Convert datatype</option>
+                </select>
+              </div>
+          </div>
+        </div>
+
+
+
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Add normalized column ( <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" id="replaceCheckbox" name="replace_normalized" value="replace"><label class="form-check-label" for="replaceCheckbox">Replace</label></div>)</label>
+                <select class="form-select ms-2" id="add_normalized_col" name="add_normalized_col" {% if not col_datatype in ["int64","float64"] %}disabled{% endif %}>
+                  <option selected disabled>Choose method...</option>
+                  <option value="none" selected>Dont add normalized column</option>
+                  <option value="Min-Max">Min-Max normalization:</option>
+                  <option value="Z-score">Z-Score Standardization</option>
+                </select>
+          </div>
+          {% endif %}
+
+
+
+
+
+        <div class="mb-3">
+        </div>
+        <div class="text-center">
+            <button type="submit" class="btn btn-success">Confirm</button>
+            {% if not item_name == 'all'%}<button class="btn btn-danger"><a id="ab" href="{{url_for('delete_column',col_name=item_name)}}">Delete column</a></button>{% endif %}
+        </div>
+        </form>
+    </div>
+</div>
+  <div class="data-analysis-text">
+      <a href="{{url_for('data_split')}}">Split data ➔</a>
+      <span>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</span>
+      <a href="{{url_for('mining_technique_option')}}">Data Mining Models ➔</a>
+  </div>
+<br>
+<br>
+<br>
+<script>
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      alert("{{ messages[0] }}");
+    {% endif %}
+  {% endwith %}
+
+
+  const nanInput = document.getElementById("nanInput");
+  const nanSelect = document.getElementById("nanActionSelect");
+  nanSelect.addEventListener("change", function () {
+    if (nanSelect.value === "replace") {
+      nanInput.disabled = false;
+    } else {
+      nanInput.disabled = true;
+      nanInput.value = "";
+    }
+  });
+
+  const datatypeValue = document.getElementById("datatype_value");
+  const datatypeSelect = document.getElementById("col_datatype");
+  datatypeSelect.addEventListener("change", function () {
+    if (datatypeSelect.value === "convert") {
+      datatypeValue.disabled = false;
+    } else {
+      datatypeValue.disabled = true;
+      datatypeValue.value = "";
+    }
+  });
+  document.addEventListener('DOMContentLoaded', function() {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+      return new bootstrap.Tooltip(tooltipTriggerEl)
+    })
+  });
+
+</script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
